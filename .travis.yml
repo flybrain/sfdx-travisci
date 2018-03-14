@@ -6,7 +6,7 @@ env:
 - URL=https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
 
 before_install:
-#test01
+#test02
 - export SFDX_AUTOUPDATE_DISABLE=true
 - export SFDX_USE_GENERIC_UNIX_KEYCHAIN=true
 - export SFDX_DOMAIN_RETRY=300
@@ -19,7 +19,6 @@ before_install:
 - sfdx force:auth:jwt:grant --clientid ${CONSUMERKEY} --username ${USERNAME} --jwtkeyfile assets/server.key --setdefaultdevhubusername -a HubOrg
 
 script:
-- sfdx force:org:create -v HubOrg -s -f config/project-scratch-def.json -a ciorg
-- sfdx force:source:push -u ciorg
-- sfdx force:apex:test:run -u ciorg -c -r human
-- sfdx force:org:delete -u ciorg -p
+- mkdir mdapioutput
+- sfdx force:source:convert -d mdapioutput/
+- sfdx force:mdapi:deploy -d mdapioutput/ -u HubOrg -w 100
