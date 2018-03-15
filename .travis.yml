@@ -1,24 +1,26 @@
 sudo: true
-dist: trusty 
+#dist: trusty
+os: osx
 cache: false
-
 env:
-- URL=https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
-
+  matrix:
+  #- URL=https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
+  - URL=https://developer.salesforce.com/media/salesforce-cli/sfdx-osx.pkg
 before_install:
-#test04
 - export SFDX_AUTOUPDATE_DISABLE=true
 - export SFDX_USE_GENERIC_UNIX_KEYCHAIN=true
 - export SFDX_DOMAIN_RETRY=300
-- wget -qO- $URL | tar xJf -
-- "./sfdx/install"
+#- wget -qO- $URL | tar xJf -
+- curl $URL --output sfdx-osx.pkg
+#- "./sfdx/install"
+- sudo installer -pkg sfdx-osx.pkg -target /
 - export PATH=./sfdx/$(pwd):$PATH
 - sfdx update
 - sfdx --version
 - sfdx plugins --core
 - sfdx force:auth:jwt:grant --clientid ${CONSUMERKEY} --username ${USERNAME} --jwtkeyfile assets/server.key --setdefaultdevhubusername -a HubOrg
-
 script:
-- mkdir mdapioutput
-- sfdx force:source:convert -d mdapioutput/
-- sfdx force:mdapi:deploy -d mdapioutput/ -u HubOrg -w 100
+- sfdx force:org:create -v HubOrg -s -f config/project-scratch-def.json -a ciorg
+- sfdx force:source:push -u ciorg
+- sfdx force:apex:test:run -u ciorg -c -r human -w 10
+- sfdx force:org:delete -u ciorg -p
